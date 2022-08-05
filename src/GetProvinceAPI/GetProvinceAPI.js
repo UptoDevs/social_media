@@ -1,39 +1,55 @@
-import React from 'react'
-import {useState, useEffect} from 'react';
+import React from "react";
+import { useState, useEffect } from "react";
+import GetMuniAPI from "../GetMuniAPI/GetMuniAPI";
 
-const GetProvinceAPI = ({ _id }) => {
-    const token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50X2lkIjoiMGQ1YjZkZjQtZTMwOS00OTBiLTk4MDUtYWY5ZmVmMDhkYzk2IiwidG9rZW4iOiJ5T25TOFh5bFdiRjdxMEs1anoiLCJ0eXBlIjoiQ0xJRU5UIiwiaXNfcHJvZHVjdGlvbiI6dHJ1ZSwic2Vzc2lvbl9pZCI6IjAxOTM4NTA5LTg3N2YtNDBkMi05ZjM5LWExYThmMThiMjE4OSIsImlhdCI6MTY1OTYwNTk3OCwiZXhwIjoxNjU5NjA2ODc4fQ.E8M3zUA82LIH-SX1RdHjfbHygaZeG2DSK7uF8EyWTU92aQo9OMManpTIAk-sa0nHyVxz2LFiTNwqN7nrv2KyO5tR58Y9YkyD8LrgOFZLnkwHinJW2hJi1xOZ7y1gyn-puKeceltV53Tml12bnLFnevkU2jYMkufROwIcvS4EbeinFUndPmBJgyEs3i1fAQmMLfltgr9w7Za1B0Q8ij6CtQ6OdJRyr7eH0bf7YAxnminlaakkWKxab6Ie6eVPnTjsFokiKkL_qnQqAgqD_2Mu0Ov3f9w7h9POWP8j4jaxTlet1XZayAxRbhe8M1s8YHREQ-Kavo5LfjXA5rmYA9XcPHETLGDwWJa1W0wIEysTD0WUXWz4fAOmimh3dm3E40v6rtBjFlEtGykegfbUMmepVy80x25-Op9ywNqO2HZyfRQJpddV3YHQMQiQweoSQdj4pSGawRRSZF4NAT8ZdcMjkEGxRe62sxyXttM_HnhN9AFbwEwE41vcdrUmGZZexMVxtbqg8uI-tKwJL33vTDZpeToQ-AqtalMlgvUl-KqYOjHONPGncAAlN59s6K2B2WRgbDvOycl_y4zBMhUCObONxAlYLEOyYKx7tqgSuztFGF5E-3zzSts1q_UALPDE_vyFYzXokvPz558vs1rOumG8nVCG2SNte0idpfH8oAaHskg";
-    const [provinces, setProvinces] = useState();
-    useEffect(()=>{
-      fetch('https://api.concati.com/address/provinces', {
-        method: "POST",
-        headers: {"Authorization": `Bearer ${token}`},
-        body: JSON.stringify({
-            "region_id": [
-              "010000000"
-            ]
-          })
-      }).then(res => res.json()).then(json => setProvinces(json));
-    },[]);
-      
-    if(!provinces){
-        return false;
-      }
-      if(provinces !== "undifined" && "code" in provinces ){
-        provinces.data.map((res) => console.log(res.province_name))
-    }
-  
-    return (
-      <div>
-        <select>
+const GetProvinceAPI = ({ paramRegionId }) => {
+  const token =
+    "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50X2lkIjoiMmRiNjAwYTItZTgwMy00YmY5LWFjMzQtN2FkMjE1MGNlZWI0IiwidG9rZW4iOiJLNGk0bkNGNXB0UGNaeWc0bUwiLCJ0eXBlIjoiQ0xJRU5UIiwiaXNfcHJvZHVjdGlvbiI6dHJ1ZSwic2Vzc2lvbl9pZCI6IjQ2N2EyMzI0LWY4NTUtNDc4NS04YmFhLTQ0NDQ3YTYyMTI4OSIsImlhdCI6MTY1OTcwNDkwOSwiZXhwIjoxNjU5NzA1ODA5fQ.BsLDi0NF1vtdC7f4k4QY8_gKgXoL8v5qn8M8BXP80b0C6qN6KdwKYdEc2TEDSRtbpDDnQdyiBFUPhN003W4qMd6x4cewSJLFZZToHi9IHfzhSqno-fgWYwkbv1DcFHnf6_cKKYBY5Il5_0Rrx5tHAXKnjGBcFfHSIoyS28tbTVfh9VE1Ii17LQb53weWq0T3KqIAqznTrEvZY8N6tk6H0NOVqC4n98XMtjegBxRdv5WNRGreac-Tio7yiBvdXTQ0wWRcpPynrRyFM-ysl6IR8xfO59YOCFY8xJZBIOXnNd_tlRERijk43YnHZ9DRW5fhR_UkNM87EAIc0EzSRixIMyDSqDwzdIVwn9V3qUi14B3zCQHOcOt4BnjIzzlHb4wj45w9JhpjGekfgY0iMjb1lFRC9cEURfXG-enFgv88GLDp7bEAxkC-2vRtiLy7TJNccqMfet6_u86BTH_dwZk1iBHbbo65D4GjgFhNhrmFDKtzPPGsJYhzOWXG2DaFFhIJfIcE84l5yLfAEbVX1y2IUrqHG3JOtBXGUJYLQ9hS6P14wDYYTOPloefvuGB8jiRj6mcFNq6W7_4RIIDFt_P6__mbLd8TkbnOKmDwOq_fCUThGNci-ngBTzLZe9HNNYtlokZeupSFvZ1Ofx3PZbLhDVGpsF8aYFyZoFrHa2S-NVQ";
+
+  const [provinces, setProvinces] = useState();
+  const [provinceId, setProvinceId] = useState();
+
+  useEffect(() => {
+    const getProvince = async () => {
+      const fetchProvince = await fetch(
+        "https://api.concati.com/address/provinces",
         {
-          provinces.data.map(res => 
-            <option value={res.province_id} key={res.province_id}>{res.province_name}</option>
-          )
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ region_id: [ paramRegionId ] }),
         }
-        </select>
-      </div>
-    )
-}
+      );
+      const resProvince = await fetchProvince.json();
+      setProvinces(await resProvince);
+    };
+    if (paramRegionId) {
+      getProvince();
+    }
+  }, [paramRegionId]);
 
-export default GetProvinceAPI
+  if (!provinces) {
+    return false;
+  }
+
+  const onHandleProvince = (event) => {
+    const getProvinceId = event.target.value;
+    setProvinceId(getProvinceId);
+    // return getProvinceId;
+  };
+
+  return (
+    <div>
+      <select onChange={onHandleProvince}>
+        <option value="0">--Select Province--</option>
+        {provinces.data.map((res, index) => (
+          <option key={index} value={res.province_id}>
+            {res.province_name}
+          </option>
+        ))}
+      </select>
+      <GetMuniAPI paramRegionId={paramRegionId}  paramProvinceId={provinceId ? provinceId.toString() : ""} />
+    </div>
+  );
+};
+
+export default GetProvinceAPI;
